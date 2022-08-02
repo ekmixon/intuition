@@ -22,7 +22,7 @@ class AlgorithmTestCase(unittest.TestCase):
         self.test_index = pd.date_range(
             '2012/01/01', '2012/01/7',
             tz=pytz.utc)
-        self.today = dt.datetime.today()
+        self.today = dt.datetime.now()
         self.past_date = self.today - dt.timedelta(days=10)
         self.test_properties = {'test': True}
         self.algo = TestAlgorithm(properties=self.test_properties)

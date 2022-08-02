@@ -52,7 +52,7 @@ class TradingFactory(TradingAlgorithm):
         ''' Append a middleware to the algorithm '''
         #NOTE A middleware Object ?
         # self.use() is usually called from initialize(), so no logger yet
-        print('registering middleware {}'.format(func.__name__))
+        print(f'registering middleware {func.__name__}')
         self.middlewares.append({
             'call': func,
             'name': func.__name__,
@@ -115,27 +115,24 @@ class TradingFactory(TradingAlgorithm):
         ''' Default and costant orders processor. Overwrite it for more
         sophisticated strategies '''
         for stock, alloc in orderbook.iteritems():
-            self.logger.info('{}: Ordered {} {} stocks'.format(
-                self.datetime, stock, alloc))
+            self.logger.info(f'{self.datetime}: Ordered {stock} {alloc} stocks')
             if isinstance(alloc, int):
                 self.order(stock, alloc)
             elif isinstance(alloc, float) and \
-                    alloc >= -1 and alloc <= 1:
+                        alloc >= -1 and alloc <= 1:
                 self.order_percent(stock, alloc)
             else:
-                self.logger.warning(
-                    '{}: invalid order for {}: {})'
-                    .format(self.datetime, stock, alloc))
+                self.logger.warning(f'{self.datetime}: invalid order for {stock}: {alloc})')
 
     def _call_one_middleware(self, middleware):
         ''' Evaluate arguments and execute the middleware function '''
-        args = {}
-        for arg in middleware['args']:
-            if hasattr(self, arg):
-                # same as eval() but safer for arbitrary code execution
-                args[arg] = reduce(getattr, arg.split('.'), self)
-        self.logger.debug('calling middleware event {}'
-                          .format(middleware['name']))
+        args = {
+            arg: reduce(getattr, arg.split('.'), self)
+            for arg in middleware['args']
+            if hasattr(self, arg)
+        }
+
+        self.logger.debug(f"calling middleware event {middleware['name']}")
         middleware['call'](**args)
 
     def _check_condition(self, when):

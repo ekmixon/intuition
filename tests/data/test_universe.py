@@ -34,9 +34,9 @@ class MarketTestCase(unittest.TestCase):
 
     def test_initialize_market_without_scheme(self):
         tmp_path = self.scheme_path.replace('market', 'bkp.market')
-        os.system('mv {} {}'.format(self.scheme_path, tmp_path))
+        os.system(f'mv {self.scheme_path} {tmp_path}')
         self.assertRaises(LoadMarketSchemeFailed, universe.Market)
-        os.system('mv {} {}'.format(tmp_path, self.scheme_path))
+        os.system(f'mv {tmp_path} {self.scheme_path}')
 
     def test__extract_forex(self):
         market = universe.Market()
@@ -70,7 +70,6 @@ class MarketTestCase(unittest.TestCase):
 
     def test_parse_universe(self):
         market = universe.Market()
-        market.parse_universe_description(
-            self.good_universe_description + ',4')
+        market.parse_universe_description(f'{self.good_universe_description},4')
         self.assertIsInstance(market.sids, list)
         eq_(len(market.sids), 4)

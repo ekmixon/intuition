@@ -32,7 +32,7 @@ class TradingEngine(object):
     ''' Factory class wrapping zipline Backtester, returns the requested algo
     ready for use '''
 
-    def __new__(self, identity, modules, strategy_conf):
+    def __new__(cls, identity, modules, strategy_conf):
 
         if 'algorithm' not in modules:
             raise InvalidEngine(
@@ -42,11 +42,11 @@ class TradingEngine(object):
         algo_obj.identity = identity
         trading_algo = algo_obj(properties=strategy_conf.get('algorithm', {}))
 
-        trading_algo.set_logger(dna.logging.logger('algo.' + identity))
+        trading_algo.set_logger(dna.logging.logger(f'algo.{identity}'))
 
         # Use a portfolio manager
         if modules.get('manager'):
-            log.info('initializing manager {}'.format(modules['manager']))
+            log.info(f"initializing manager {modules['manager']}")
             # Linking to the algorithm the configured portfolio manager
             trading_algo.manager = utils.intuition_module(modules['manager'])(
                 strategy_conf.get('manager', {}))

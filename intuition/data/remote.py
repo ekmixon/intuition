@@ -71,8 +71,7 @@ def snapshot_google(symbols):
             snapshot[symbols[i]] = apply_mapping(
                 quote, google_light_mapping)
         else:
-            log.warning('Unknown symbol {}, ignoring...'.format(
-                quote['t']))
+            log.warning(f"Unknown symbol {quote['t']}, ignoring...")
 
     return pd.DataFrame(snapshot)
 

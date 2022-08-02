@@ -57,7 +57,7 @@ def intuition(args):
         data = {'universe': context['market'],
                 'index': context['config']['index']}
         # Add user settings
-        data.update(context['strategy']['data'])
+        data |= context['strategy']['data']
         # Load backtest and / or live module(s)
         if 'backtest' in modules:
             data['backtest'] = utils.intuition_module(modules['backtest'])
@@ -80,10 +80,14 @@ def main():
 
     with log_setup.applicationbound():
         try:
-            log.info('intuition v{} ready'.format(__version__),
-                     level=loglevel, bot=args['bot'],
-                     context=args['context'],
-                     session=args['session'])
+            log.info(
+                f'intuition v{__version__} ready',
+                level=loglevel,
+                bot=args['bot'],
+                context=args['context'],
+                session=args['session'],
+            )
+
 
             analyzes = intuition(args)
             analyzes.build_report(show=args['showlog'])
@@ -92,10 +96,10 @@ def main():
         except Exception as error:
             if loglevel == 'debug':
                 raise
-            log.error('{}: {}'.format(type(error).__name__, str(error)))
+            log.error(f'{type(error).__name__}: {str(error)}')
             exit_status = 1
 
         finally:
-            log.info('session ended with status {}'.format(exit_status))
+            log.info(f'session ended with status {exit_status}')
 
     return exit_status

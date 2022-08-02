@@ -28,11 +28,14 @@ log = dna.logging.logger(__name__)
 def parse_commandline():
     parser = argparse.ArgumentParser(
         description='Intuition, the terrific trading system')
-    parser.add_argument('-V', '--version',
-                        action='version',
-                        version='%(prog)s v{} Licence {}'.format(
-                            __version__, __licence__),
-                        help='Print program version')
+    parser.add_argument(
+        '-V',
+        '--version',
+        action='version',
+        version=f'%(prog)s v{__version__} Licence {__licence__}',
+        help='Print program version',
+    )
+
     parser.add_argument('-v', '--showlog',
                         action='store_true',
                         help='Print logs on stdout')
@@ -65,7 +68,7 @@ class Context(object):
         StringType(regex='.*://\w').validate(access)
         self._ctx_module = access.split('://')[0]
         self._ctx_infos = access.split('://')[1]
-        URLType().validate('http://{}'.format(self._ctx_infos))
+        URLType().validate(f'http://{self._ctx_infos}')
 
     def __enter__(self):
         # Use the given context module to grab configuration
@@ -102,4 +105,4 @@ def logfile(session_id):
     log_path = os.path.expanduser('~/.intuition/logs')
     log_path = log_path if os.path.exists(log_path) \
         else intuition.constants.DEFAULT_LOGPATH
-    return '{}/{}.log'.format(log_path, session_id)
+    return f'{log_path}/{session_id}.log'

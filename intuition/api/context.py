@@ -68,14 +68,12 @@ class ContextFactory():
         '''
         Build a timeline from given (or not) start and end dates
         '''
-        if 'start' in context:
-            if isinstance(context['start'], dt.date):
-                context['start'] = dt.date.strftime(
-                    context['start'], format='%Y-%m-%d')
-        if 'end' in context:
-            if isinstance(context['end'], dt.date):
-                context['end'] = dt.date.strftime(
-                    context['end'], format='%Y-%m-%d')
+        if 'start' in context and isinstance(context['start'], dt.date):
+            context['start'] = dt.date.strftime(
+                context['start'], format='%Y-%m-%d')
+        if 'end' in context and isinstance(context['end'], dt.date):
+            context['end'] = dt.date.strftime(
+                context['end'], format='%Y-%m-%d')
 
         trading_dates = intuition.utils.build_trading_timeline(
             context.pop('start', None), context.pop('end', None))
@@ -95,10 +93,7 @@ class ContextFactory():
                 strategy[k] = False
             else:
                 try:
-                    if v.find('.') > 0:
-                        strategy[k] = float(v)
-                    else:
-                        strategy[k] = int(v)
+                    strategy[k] = float(v) if v.find('.') > 0 else int(v)
                 except ValueError:
                     pass
 

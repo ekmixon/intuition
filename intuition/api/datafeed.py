@@ -84,10 +84,7 @@ class HybridDataFactory(DataSource):
 
     @property
     def mapping(self):
-        if self._is_live:
-            return self.live.mapping
-        else:
-            return self.backtest.mapping
+        return self.live.mapping if self._is_live else self.backtest.mapping
 
     def _set_next_tick(self, date):
         ''' Use self.freq and the given date to deduce the next event hour '''
@@ -108,8 +105,6 @@ class HybridDataFactory(DataSource):
 
     def _agnostic_get_data_at(self, date, data):
         dated_data = pd.DataFrame()
-        n_axes = len(data.axes)
-
         if self._is_live:
             try:
                 dated_data = self.live.get_data(self.sids)
@@ -123,6 +118,8 @@ class HybridDataFactory(DataSource):
 
         else:
             midnight_date = date.replace(hour=0, minute=0)
+            n_axes = len(data.axes)
+
             if n_axes == 2:
                 if midnight_date in data.index:
                     dated_data = pd.DataFrame(
@@ -150,7 +147,7 @@ class HybridDataFactory(DataSource):
             # Trade until the end of the trading day
             while date < close_hour:
                 # Set to opening of the market
-                self.log.debug('--> next tick {}'.format(date))
+                self.log.debug(f'--> next tick {date}')
                 # NOTE Make _is_live a property ?
                 self._is_live = utils.next_tick(date)
 

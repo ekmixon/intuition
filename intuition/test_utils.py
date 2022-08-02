@@ -26,16 +26,20 @@ class FakeContext(ContextFactory):
     def load(self):
         if self.raise_error:
             raise ValueError
-        return {
-            'universe': 'forex,5',
-            'index': pd.date_range('2012/01/01', '2012/02/01'),
-            'modules': {
-                'algorithm': 'fake_algorithm',
-                'manager': 'fake_manager',
-                'backtest': 'fake_backtest',
-                'live': 'fake_live'
+        return (
+            {}
+            if self.bad_format
+            else {
+                'universe': 'forex,5',
+                'index': pd.date_range('2012/01/01', '2012/02/01'),
+                'modules': {
+                    'algorithm': 'fake_algorithm',
+                    'manager': 'fake_manager',
+                    'backtest': 'fake_backtest',
+                    'live': 'fake_live',
+                },
             }
-        } if not self.bad_format else {}
+        )
 
 
 class TestAlgorithm(TradingFactory):

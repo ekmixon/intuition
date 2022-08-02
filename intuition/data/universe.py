@@ -60,9 +60,7 @@ class Market(object):
 
         self.scheme = market_scheme
         self.benchmark = market_scheme['benchmark']
-        return map(
-            lambda x: x + '.pa',
-            market_scheme[market[-1]].keys())
+        return map(lambda x: f'{x}.pa', market_scheme[market[-1]].keys())
 
     @property
     def timezone(self):
@@ -126,5 +124,4 @@ class Market(object):
         return index
 
     def __str__(self):
-        return '<sids: {} exchange: {} timezone: {} benchmark: {}'.format(
-            self.sids, self.exchange, self.timezone, self.benchmark)
+        return f'<sids: {self.sids} exchange: {self.exchange} timezone: {self.timezone} benchmark: {self.benchmark}'

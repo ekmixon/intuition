@@ -54,11 +54,17 @@ class FakePanelBacktestDatasource(object):
 
     def get_data(self, sids, start, end):
         index = pd.date_range(start, end, tz=pytz.utc)
-        fake_data = {}
-        for sid in sids:
-            fake_data[sid] = pd.DataFrame(
-                {field: [random.random()] * len(index)
-                 for field in ['price', 'low', 'high', 'volume']}, index=index)
+        fake_data = {
+            sid: pd.DataFrame(
+                {
+                    field: [random.random()] * len(index)
+                    for field in ['price', 'low', 'high', 'volume']
+                },
+                index=index,
+            )
+            for sid in sids
+        }
+
         return pd.Panel(fake_data)
 
 
@@ -69,11 +75,17 @@ class FakePanelWithoutVolumeBacktestDatasource(object):
 
     def get_data(self, sids, start, end):
         index = pd.date_range(start, end, tz=pytz.utc)
-        fake_data = {}
-        for sid in sids:
-            fake_data[sid] = pd.DataFrame(
-                {field: [random.random()] * len(index)
-                 for field in ['price', 'low', 'high']}, index=index)
+        fake_data = {
+            sid: pd.DataFrame(
+                {
+                    field: [random.random()] * len(index)
+                    for field in ['price', 'low', 'high']
+                },
+                index=index,
+            )
+            for sid in sids
+        }
+
         return pd.Panel(fake_data)
 
 

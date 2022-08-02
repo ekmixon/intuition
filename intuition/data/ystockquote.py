@@ -27,11 +27,10 @@ except ImportError:
 
 
 def _request(symbol, stat):
-    url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
+    url = f'http://finance.yahoo.com/d/quotes.csv?s={symbol}&f={stat}'
     req = Request(url)
     resp = urlopen(req)
-    content = resp.read().decode().strip()
-    return content
+    return resp.read().decode().strip()
 
 
 def get_all(symbol):
@@ -466,7 +465,7 @@ def get_sector(symbol):
     '''
     Uses BeautifulSoup to scrape stock sector from Yahoo! Finance website
     '''
-    url = 'http://finance.yahoo.com/q/pr?s=%s+Profile' % symbol
+    url = f'http://finance.yahoo.com/q/pr?s={symbol}+Profile'
     soup = BeautifulSoup(urlopen(url).read())
     try:
         sector = soup.find('td', text='Sector:').\
@@ -480,7 +479,7 @@ def get_industry(symbol):
     '''
     Uses BeautifulSoup to scrape stock industry from Yahoo! Finance website
     '''
-    url = 'http://finance.yahoo.com/q/pr?s=%s+Profile' % symbol
+    url = f'http://finance.yahoo.com/q/pr?s={symbol}+Profile'
     soup = BeautifulSoup(urlopen(url).read())
     try:
         industry = soup.find('td', text='Industry:').\
@@ -494,7 +493,7 @@ def get_type(symbol):
     '''
     Uses BeautifulSoup to scrape symbol category from Yahoo! Finance website
     '''
-    url = 'http://finance.yahoo.com/q/pr?s=%s+Profile' % symbol
+    url = f'http://finance.yahoo.com/q/pr?s={symbol}+Profile'
     soup = BeautifulSoup(urlopen(url).read())
     if soup.find('span', text='Business Summary'):
         return 'Stock'
@@ -502,20 +501,17 @@ def get_type(symbol):
         asset_type = 'Fund'
     elif symbol.find('^') == 0:
         asset_type = 'Index'
-    else:
-        pass
     return asset_type
 
 
 def get_indices(symbol):
-    url = 'http://finance.yahoo.com/q/pr?s=%s+Profile' % symbol
+    url = f'http://finance.yahoo.com/q/pr?s={symbol}+Profile'
     soup = BeautifulSoup(urlopen(url).read())
     indices = []
     try:
         tmp_idx = soup.find('td', text='Index Membership:').\
             find_next_sibling().findAll('a')
-        for idx in tmp_idx:
-            indices.append(idx.text)
+        indices.extend(idx.text for idx in tmp_idx)
     except:
         pass
     return ','.join(indices)
@@ -529,23 +525,26 @@ def get_historical_prices(symbol, start_date, end_date):
     Returns a nested dictionary (dict of dicts).
     outer dict keys are dates ('YYYY-MM-DD')
     """
-    params = urlencode({
-        's': symbol,
-        'a': int(start_date[5:7]) - 1,
-        'b': int(start_date[8:10]),
-        'c': int(start_date[0:4]),
-        'd': int(end_date[5:7]) - 1,
-        'e': int(end_date[8:10]),
-        'f': int(end_date[0:4]),
-        'g': 'd',
-        'ignore': '.csv',
-    })
-    url = 'http://ichart.yahoo.com/table.csv?%s' % params
+    params = urlencode(
+        {
+            's': symbol,
+            'a': int(start_date[5:7]) - 1,
+            'b': int(start_date[8:10]),
+            'c': int(start_date[:4]),
+            'd': int(end_date[5:7]) - 1,
+            'e': int(end_date[8:10]),
+            'f': int(end_date[:4]),
+            'g': 'd',
+            'ignore': '.csv',
+        }
+    )
+
+    url = f'http://ichart.yahoo.com/table.csv?{params}'
     req = Request(url)
     resp = urlopen(req)
     content = str(resp.read().decode('utf-8').strip())
     daily_data = content.splitlines()
-    hist_dict = dict()
+    hist_dict = {}
     keys = daily_data[0].split(',')
     for day in daily_data[1:]:
         day_data = day.split(',')

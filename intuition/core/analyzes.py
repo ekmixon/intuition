@@ -48,10 +48,7 @@ class Analyze():
             log.warn('unable to get benchmark data on live trading for now')
             skip = True
 
-        orders = 0
-        for order in self.results.orders:
-            orders += len(order)
-
+        orders = sum(len(order) for order in self.results.orders)
         final_value = self.results.portfolio_value[-1]
         report = {
             'portfolio': final_value,
@@ -63,7 +60,7 @@ class Analyze():
         if not skip:
             report['portfolio_perfs'] = returns_df['algo_c_return'][-1] * 100.0
             report['benchmark_perfs'] = \
-                returns_df['benchmark_c_return'][-1] * 100.0
+                    returns_df['benchmark_c_return'][-1] * 100.0
 
         perfs = self.overall_metrics(timestamp)
         for k, v in perfs.iteritems():
@@ -86,41 +83,35 @@ class Analyze():
 
     def rolling_performances(self, timestamp='one_month'):
         ''' Filters self.perfs '''
-        # TODO Study the impact of month choice
-        # TODO Check timestamp in an enumeration
-        # TODO Implement other benchmarks for perf computation
-        # (zipline issue, maybe expected)
-
-        if self.metrics:
-            perfs = {}
-            length = range(len(self.metrics[timestamp]))
-            index = self._get_index(self.metrics[timestamp])
-            perf_keys = self.metrics[timestamp][0].keys()
-            perf_keys.pop(perf_keys.index('period_label'))
-
-            perfs['period'] = np.array(
-                [pd.datetime.date(date) for date in index])
-            for key in perf_keys:
-                perfs[key] = self._to_perf_array(timestamp, key, length)
-        else:
+        if not self.metrics:
             # TODO Get it from DB if it exists
             raise NotImplementedError()
 
+        length = range(len(self.metrics[timestamp]))
+        index = self._get_index(self.metrics[timestamp])
+        perf_keys = self.metrics[timestamp][0].keys()
+        perf_keys.pop(perf_keys.index('period_label'))
+
+        perfs = {'period': np.array([pd.datetime.date(date) for date in index])}
+        for key in perf_keys:
+            perfs[key] = self._to_perf_array(timestamp, key, length)
         return pd.DataFrame(perfs, index=index)
 
     def overall_metrics(self, timestamp='one_month', metrics=None):
         '''
         Use zipline results to compute some performance indicators
         '''
-        perfs = dict()
-
         # If no rolling perfs provided, computes it
         if metrics is None:
             metrics = self.rolling_performances(timestamp=timestamp)
         riskfree = np.mean(metrics['treasury_period_return'])
 
-        perfs['sharpe'] = qstk_get_sharpe_ratio(
-            metrics['algorithm_period_return'].values, risk_free=riskfree)
+        perfs = {
+            'sharpe': qstk_get_sharpe_ratio(
+                metrics['algorithm_period_return'].values, risk_free=riskfree
+            )
+        }
+
         perfs['algorithm_period_return'] = (
             ((metrics['algorithm_period_return'] + 1).cumprod()) - 1)[-1]
         perfs['max_drawdown'] = max(metrics['max_drawdown'])
@@ -133,26 +124,27 @@ class Analyze():
         return perfs
 
     def get_returns(self, benchmark=''):
-        returns = {}
-
-        if benchmark:
-            try:
-                benchmark_data = (
-                    get_benchmark_returns(benchmark,
-                                          self.results.index[0],
-                                          self.results.index[-1]))
-            except Exception as e:
-                raise KeyError(e)
-        else:
+        if not benchmark:
             #TODO Automatic detection given exchange market (on command line) ?
             raise NotImplementedError()
 
+        try:
+            benchmark_data = (
+                get_benchmark_returns(benchmark,
+                                      self.results.index[0],
+                                      self.results.index[-1]))
+        except Exception as e:
+            raise KeyError(e)
         # NOTE Could be more efficient. But len(benchmark_data.date) !=
         # len(self.results.returns.index). Maybe because of different markets
         dates = pd.DatetimeIndex([d.date for d in benchmark_data])
 
-        returns['benchmark_return'] = pd.Series(
-            [d.returns for d in benchmark_data], index=dates)
+        returns = {
+            'benchmark_return': pd.Series(
+                [d.returns for d in benchmark_data], index=dates
+            )
+        }
+
         returns['benchmark_c_return'] = (
             (returns['benchmark_return'] + 1).cumprod()) - 1
         returns['algo_return'] = pd.Series(

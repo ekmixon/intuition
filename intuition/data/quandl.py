@@ -24,20 +24,19 @@ def _build_quandl_code(symbol):
     dot_pos = symbol.find('.')
     slash_pos = symbol.find('/')
     if dot_pos > 0:
-        market = symbol[dot_pos + 1:]
         provider = 'YAHOO'
+        market = symbol[dot_pos + 1:]
         symbol = symbol[:dot_pos]
-        code = '{}_{}'.format(market, symbol)
+        code = f'{market}_{symbol}'
+    elif slash_pos > 0:
+        pair = symbol.split('/')
+        provider = 'QUANDL'
+        code = f'{pair[0]}{pair[1]}'
     else:
-        if slash_pos > 0:
-            pair = symbol.split('/')
-            provider = 'QUANDL'
-            code = '{}{}'.format(pair[0], pair[1])
-        else:
-            market = 'NASDAQ'
-            provider = 'GOOG'
-            code = '{}_{}'.format(market, symbol)
-    return '{}/{}'.format(provider, code).upper()
+        market = 'NASDAQ'
+        provider = 'GOOG'
+        code = f'{market}_{symbol}'
+    return f'{provider}/{code}'.upper()
 
 
 def use_quandl_symbols(fct):
@@ -64,16 +63,14 @@ def fractionate_request(fct):
         cursor = 0
         data = {}
         while cursor < len(symbols):
-            if cursor + tolerance_window > len(symbols):
-                limit = len(symbols)
-            else:
-                limit = cursor + tolerance_window
+            limit = min(cursor + tolerance_window, len(symbols))
             symbols_fraction = symbols[cursor:limit]
             cursor += tolerance_window
             data_fraction = fct(self, symbols_fraction, **kwargs)
             for sid, df in data_fraction.iteritems():
                 data[sid] = df
         return pd.Panel(data).fillna(method='pad')
+
     return inner
 
 
@@ -82,8 +79,7 @@ class DataQuandl(object):
     Quandl.com as datasource
     '''
     def __init__(self, quandl_key=None):
-        self.quandl_key = quandl_key if quandl_key \
-            else os.environ.get('QUANDL_API_KEY', None)
+        self.quandl_key = quandl_key or os.environ.get('QUANDL_API_KEY', None)
 
     @fractionate_request
     @use_quandl_symbols

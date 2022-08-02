@@ -33,9 +33,7 @@ def qstk_get_sharpe_ratio(rets, risk_free=0.00):
     f_dev = np.std(rets, axis=0)
     f_mean = np.mean(rets, axis=0)
 
-    f_sharpe = (f_mean * 252 - risk_free) / (f_dev * np.sqrt(252))
-
-    return f_sharpe
+    return (f_mean * 252 - risk_free) / (f_dev * np.sqrt(252))
 
 
 def moving_average(data, periods, type='simple'):
@@ -116,19 +114,11 @@ def annualized_returns(ret_per_period, periods_per_year):
 def average_returns(ts, **kwargs):
     ''' Compute geometric average returns from a returns time serie'''
     average_type = kwargs.get('type', 'net')
-    if average_type == 'net':
-        relative = 0
-    else:
-        relative = -1  # gross
+    relative = 0 if average_type == 'net' else -1
     #start = kwargs.get('start', ts.index[0])
     #end = kwargs.get('end', ts.index[len(ts.index) - 1])
     #delta = kwargs.get('delta', ts.index[1] - ts.index[0])
-    period = kwargs.get('period', None)
-    if isinstance(period, int):
-        pass
-    #else:
-        #ts = reIndexDF(ts, start=start, end=end, delta=delta)
-        #period = 1
+    period = kwargs.get('period')
     avg_ret = 1
     for idx in range(len(ts.index)):
         if idx % period == 0:
@@ -137,10 +127,10 @@ def average_returns(ts, **kwargs):
 
 
 def cc_returns(ts, **kwargs):
-    start = kwargs.get('start', None)
-    end = kwargs.get('end', dt.datetime.today())
+    start = kwargs.get('start')
+    end = kwargs.get('end', dt.datetime.now())
     delta = kwargs.get('deltaya', BDay())
-    period = kwargs.get('period', None)
+    period = kwargs.get('period')
     rets = returns(ts, type='net', start=start, end=end,
                    delta=delta, period=period)
     return math.log(1 + rets)
@@ -162,26 +152,16 @@ def returns(ts, **kwargs):
     '''
     returns_type = kwargs.get('type', 'net')
     cumulative = kwargs.get('cumulative', False)
-    if returns_type == 'net':
-        relative = 0
-    else:
-        relative = 1  # gross
-    start = kwargs.get('start', None)
-    end = kwargs.get('end', dt.datetime.today())
+    relative = 0 if returns_type == 'net' else 1
+    start = kwargs.get('start')
+    end = kwargs.get('end', dt.datetime.now())
     #delta = kwargs.get('delta', None)
     period = kwargs.get('period', 1)
     if isinstance(start, dt.datetime):
-        log.debug('{} / {} -1'.format(ts[end], ts[start]))
+        log.debug(f'{ts[end]} / {ts[start]} -1')
         return ts[end] / ts[start] - 1 + relative
-    #elif isinstance(delta, pd.DateOffset) or isinstance(delta, dt.timedelta):
-        #FIXME timezone problem
-        #FIXME reIndexDF is deprecated
-        #ts = reIndexDF(ts, delta=delta)
-        #period = 1
     rets_df = ts / ts.shift(period) - 1 + relative
-    if cumulative:
-        return rets_df.cumprod()
-    return rets_df[1:]
+    return rets_df.cumprod() if cumulative else rets_df[1:]
 
 
 def daily_returns(ts, **kwargs):

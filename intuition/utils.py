@@ -54,26 +54,7 @@ def build_trading_timeline(start, end):
     EMPTY_DATES = pd.date_range('2000/01/01', periods=0, tz=pytz.utc)
     now = dt.datetime.now(tz=pytz.utc)
 
-    if not start:
-        if not end:
-            # Live trading until the end of the day
-            bt_dates = EMPTY_DATES
-            live_dates = pd.date_range(
-                start=now,
-                end=normalize_date_format('23h59'))
-        else:
-            end = normalize_date_format(end)
-            if end < now:
-                # Backtesting since a year before end
-                bt_dates = pd.date_range(
-                    start=end - 360 * pd.datetools.day,
-                    end=end)
-                live_dates = EMPTY_DATES
-            elif end > now:
-                # Live trading from now to end
-                bt_dates = EMPTY_DATES
-                live_dates = pd.date_range(start=now, end=end)
-    else:
+    if start:
         start = normalize_date_format(start)
         if start < now:
             if not end:
@@ -110,4 +91,22 @@ def build_trading_timeline(start, end):
                 bt_dates = EMPTY_DATES
                 live_dates = pd.date_range(start=start, end=end)
 
+    elif not end:
+        # Live trading until the end of the day
+        bt_dates = EMPTY_DATES
+        live_dates = pd.date_range(
+            start=now,
+            end=normalize_date_format('23h59'))
+    else:
+        end = normalize_date_format(end)
+        if end < now:
+            # Backtesting since a year before end
+            bt_dates = pd.date_range(
+                start=end - 360 * pd.datetools.day,
+                end=end)
+            live_dates = EMPTY_DATES
+        elif end > now:
+            # Live trading from now to end
+            bt_dates = EMPTY_DATES
+            live_dates = pd.date_range(start=now, end=end)
     return bt_dates + live_dates
